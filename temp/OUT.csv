@@ -1,0 +1,96 @@
+TABLE 3.1 C:\Users\anthony_raborn\OneDrive - National OUT.csvt Dec  9 2023  0:20harmacy\an
+INPUT: 1000 PERSON  200 Item  REPORTED: 1000 PERSON  200 Item  2 CATS WINSTEPS 4.2.0
+------------------------------------------------------------------------------------------
+ 
+     SUMMARY OF 1000 MEASURED PERSON
+-------------------------------------------------------------------------------
+|          TOTAL                         MODEL         INFIT        OUTFIT    |
+|          SCORE     COUNT     MEASURE    S.E.      MNSQ   ZSTD   MNSQ   ZSTD |
+|-----------------------------------------------------------------------------|
+| MEAN     102.8     200.0       .0308   .1870       .99    -.1    .99    -.1 |
+| P.SD      29.0        .0      1.0102   .0086       .10    1.0    .19    1.0 |
+| S.SD      29.0        .0      1.0107   .0086       .10    1.0    .19    1.0 |
+| MAX.     184.0     200.0      3.2798   .3347      1.30    2.9   2.37    2.5 |
+| MIN.      10.0     200.0     -3.9605   .1844       .61   -4.1    .49   -3.2 |
+|-----------------------------------------------------------------------------|
+| REAL RMSE  .1904 TRUE SD   .9921  SEPARATION  5.21  PERSON RELIABILITY  .96 |
+|MODEL RMSE  .1872 TRUE SD   .9927  SEPARATION  5.30  PERSON RELIABILITY  .97 |
+| S.E. OF PERSON MEAN = .0320                                                 |
+-------------------------------------------------------------------------------
+PERSON RAW SCORE-TO-MEASURE CORRELATION = 1.00
+CRONBACH ALPHA (KR-20) PERSON RAW SCORE "TEST" RELIABILITY = .97  SEM = 5.40
+ 
+     SUMMARY OF 200 MEASURED Item
+-------------------------------------------------------------------------------
+|          TOTAL                         MODEL         INFIT        OUTFIT    |
+|          SCORE     COUNT     MEASURE    S.E.      MNSQ   ZSTD   MNSQ   ZSTD |
+|-----------------------------------------------------------------------------|
+| MEAN     514.0    1000.0      -.0663   .0849       .99    -.2    .99    -.1 |
+| P.SD     289.3        .0      1.6223   .0094       .05    1.1    .09    1.1 |
+| S.SD     290.0        .0      1.6264   .0094       .05    1.1    .09    1.1 |
+| MAX.     913.0    1000.0      2.6350   .1176      1.14    2.5   1.27    3.2 |
+| MIN.      89.0    1000.0     -2.7070   .0697       .81   -2.9    .74   -2.6 |
+|-----------------------------------------------------------------------------|
+| REAL RMSE  .0861 TRUE SD  1.6200  SEPARATION 18.81  Item   RELIABILITY 1.00 |
+|MODEL RMSE  .0854 TRUE SD  1.6201  SEPARATION 18.97  Item   RELIABILITY 1.00 |
+| S.E. OF Item MEAN = .1150                                                   |
+-------------------------------------------------------------------------------
+Item RAW SCORE-TO-MEASURE CORRELATION = -1.00
+Global statistics: please see Table 44.
+UMEAN=.0000 USCALE=1.0000
+ 
+TABLE 3.2 C:\Users\anthony_raborn\OneDrive - National OUT.csvt Dec  9 2023  0:20harmacy\an
+INPUT: 1000 PERSON  200 Item  REPORTED: 1000 PERSON  200 Item  2 CATS WINSTEPS 4.2.0
+------------------------------------------------------------------------------------------
+ 
+ 
+SUMMARY OF CATEGORY STRUCTURE.  Model="R"
+-----------------------------------------------------------------------
+|CATEGORY   OBSERVED|OBSVD SAMPLE|INFIT OUTFIT| COHERENCE       |ESTIM|
+|LABEL SCORE COUNT %|AVRGE EXPECT|  MNSQ  MNSQ| M->C C->M  RMSR |DISCR|
+|-------------------+------------+------------+-----------------+-----|
+|  0   0   97204  49|-1.166 -1.16|   .99   .98|  79%  80%  .3835|     | 0
+|  1   1  102796  51|1.2920 1.286|   .99   .99|  81%  80%  .3712| 1.01| 1
+-----------------------------------------------------------------------
+OBSERVED AVERAGE is mean of measures in category. It is not a parameter estimate.
+M->C = Does Measure imply Category?
+C->M = Does Category imply Measure?
+ 
+-------------------------------------------------------
+| Category Matrix : Confusion Matrix : Matching Matrix|
+|             Predicted Scored-Category Frequency     |
+|Obs Cat Freq|           0           1 |        Total |
+|------------+-------------------------+--------------|
+|          0 |    68613.98    28590.02 |     97204.00 |
+|          1 |    28590.00    74206.00 |    102796.00 |
+|------------+-------------------------+--------------|
+|      Total |    97203.98   102796.02 |    200000.00 |
+-------------------------------------------------------
+ 
+        DICHOTOMOUS CURVES
+P      -+--------------+--------------+--------------+--------------+-
+R  1.0 +                                                             +
+O      |                                                             |
+B      |0                                                           1|
+A      | 000000                                               111111 |
+B   .8 +       00000                                     11111       +
+I      |            0000                             1111            |
+L      |                0000                     1111                |
+I      |                    000               111                    |
+T   .6 +                       000         111                       +
+Y      |                          000   111                          |
+    .5 +                             ***                             +
+O      |                          111   000                          |
+F   .4 +                       111         000                       +
+       |                    111               000                    |
+R      |                1111                     0000                |
+E      |            1111                             0000            |
+S   .2 +       11111                                     00000       +
+P      | 111111                                               000000 |
+O      |1                                                           0|
+N      |                                                             |
+S   .0 +                                                             +
+E      -+--------------+--------------+--------------+--------------+-
+       -2             -1              0              1              2
+        PERSON [MINUS] Item MEASURE
+ 

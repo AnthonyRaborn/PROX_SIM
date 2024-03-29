@@ -1,6 +1,15 @@
 ---
 title: "PROX Simulation Specs"
-format: html
+format: 
+  html:
+    code-fold: true
+    fig-width: 10
+    fig-height: 8
+    toc: true
+knitr:
+  opts_chunk: 
+    message: false
+    warning: false
 editor_options: 
   chunk_output_type: console
 ---
@@ -61,7 +70,9 @@ conditions =
     , TRUE ~ Condition
     )
   )
-knitr::kable(conditions, col.names = c("Condition Number", "Item/Person Parameters", "Number of Items", "Number of Persons"))
+kableExtra::kbl(conditions, col.names = c("Condition Number", "Item/Person Parameters", "Number of Items", "Number of Persons")) %>%
+  kableExtra::kable_styling(fixed_thead = T, bootstrap_options = 'condensed') %>%
+  kableExtra::scroll_box()
 
 conditions_save <- 
   conditions %>% 
@@ -203,7 +214,8 @@ END LABELS'
   # run .bat
   system("cmd.exe",
          input = paste(' cd temp/ & winsteps_overall.bat'),
-         show.output.on.console = FALSE)
+         show.output.on.console = FALSE,
+         ignore.stdout = TRUE)
 }
 winsteps_read_scores = function(scores_file = 'theta.out') {
   require(tidyverse)
@@ -237,7 +249,7 @@ For PROX, a custom function using the formula [given on the Winsteps website](ht
 
 For JMLE, the `tam.jml` function accepts the matrix of responses and, optionally, a matrix of item numbers (first column) and item difficulties (second column) to use as fixed values. This puts the focus on the *person parameter estimates* which is what we want for our simulation. The `$theta` element of the resulting list holds the estimated person parameters. Since the function does not automatically remove items with no correct responses, the simulation automatically removes these items (if they exist in the given iteration) and estimates person parameters based on the remaining items.
 
-<!-- For MMLE, the `tam.mml` function behaves similarly. The output is different, however; we need to access `$person$EAP` to get the person theta estimates using the expected a posteriori of the marginal maximum likelihood estimator. Since some items may normally be removed due to the number of correct responses, we also specify `item.elim = FALSE` to keep these items in the analysis. -->
+For MMLE, the `tam.mml` function behaves similarly. The output is different, however; we need to access `$person$EAP` to get the person theta estimates using the expected a posteriori of the marginal maximum likelihood estimator. Since some items may normally be removed due to the number of correct responses, we also specify `item.elim = FALSE` to keep these items in the analysis.
 <!-- I forgot to actually include the mml EAP estimates in the final results, d'oh! -->
 
 For CMLE, the Winsteps software is used. A custom function that manages the Winsteps control files and reads in the results was created as a simpler and more programmatic interface between the simulation conditions and Winsteps. With fixed item parameters, Winsteps is able to generate person parameters with CMLE; other common Rasch/IRT software does not seem to have this functionality.
@@ -249,10 +261,11 @@ For EAP, the `irtoys` package provides an `eap()` estimator in the `ability()` f
 ### Standard Normal
 
 ```{r condition-1}
-#| eval: true
+#| eval: false
 #| output: false
+#| echo: true
 # Conditions 1-18 Parameters
-Start.time = Sys.time()
+
 
 m_item = m_person = 0
 sd_item = sd_person = 1
@@ -261,7 +274,7 @@ responses_file_name = 'simdata/01_standard_normal_responses.RDS'
 
 condition_1_estimates = vector(mode = 'list', length = 18*iter)
 condition_1_responses = vector(mode = 'list', length = 18*iter)
-offset = 0
+iter_count = 1
 
 for (j in number_items) {
   print(paste0("Items: ", j))
@@ -342,13 +355,14 @@ for (j in number_items) {
       thetas = cbind(person_theta,
                      prox_theta_est,
                      jmle_theta_est,
+                     mmle_theta_est,
                      cmle_theta_est,
                      eap_theta_est)
 
-      condition_1_estimates[[i+offset]] = list(Condition = condition_name, Theta = thetas)
-      condition_1_responses[[i+offset]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
+      condition_1_estimates[[iter_count]] = list(Condition = condition_name, Theta = thetas)
+      condition_1_responses[[iter_count]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
 
-      offset = offset + 1
+      iter_count = iter_count + 1
     }
     
   }
@@ -358,17 +372,19 @@ for (j in number_items) {
 saveRDS(condition_1_estimates, file = estimates_file_name)
 saveRDS(condition_1_responses, file = responses_file_name)
 
+rm(list = c('condition_1_estimates', 'condition_1_responses'))
 ```
 
-`r Sys.time() - Start.time`
+
 
 ### Wide Normal
 
 ```{r condition-2}
-#| eval: true
+#| eval: false
 #| output: false
+#| echo: true
 # Conditions 19-36 Parameters
-Start.time = Sys.time()
+
 
 m_item = m_person = 0
 sd_item = sd_person = 2
@@ -377,7 +393,7 @@ responses_file_name = 'simdata/02_wide_normal_responses.RDS'
 
 condition_2_estimates = vector(mode = 'list', length = 18*iter)
 condition_2_responses = vector(mode = 'list', length = 18*iter)
-offset = 0
+iter_count = 1
 
 for (j in number_items) {
   print(paste0("Items: ", j))
@@ -458,13 +474,14 @@ for (j in number_items) {
       thetas = cbind(person_theta,
                      prox_theta_est,
                      jmle_theta_est,
+                     mmle_theta_est,
                      cmle_theta_est,
                      eap_theta_est)
 
-      condition_2_estimates[[i+offset]] = list(Condition = condition_name, Theta = thetas)
-      condition_2_responses[[i+offset]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
+      condition_2_estimates[[iter_count]] = list(Condition = condition_name, Theta = thetas)
+      condition_2_responses[[iter_count]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
 
-      offset = offset + 1
+      iter_count = iter_count + 1
     }
     
   }
@@ -474,15 +491,19 @@ for (j in number_items) {
 saveRDS(condition_2_estimates, file = estimates_file_name)
 saveRDS(condition_2_responses, file = responses_file_name)
 
+rm(list = c('condition_2_estimates', 'condition_2_responses'))
 ```
+
+
 
 ### -1 Item +1 Theta
 
 ```{r condition-3}
-#| eval: true
+#| eval: false
 #| output: false
+#| echo: true
 # Conditions 37-54 Parameters
-Start.time = Sys.time()
+
 
 m_item = -1; m_person = 1
 sd_item = sd_person = 1
@@ -491,7 +512,7 @@ responses_file_name = 'simdata/03_small_mismatch_responses.RDS'
 
 condition_3_estimates = vector(mode = 'list', length = 18*iter)
 condition_3_responses = vector(mode = 'list', length = 18*iter)
-offset = 0
+iter_count = 1
 
 for (j in number_items) {
   print(paste0("Items: ", j))
@@ -572,13 +593,14 @@ for (j in number_items) {
       thetas = cbind(person_theta,
                      prox_theta_est,
                      jmle_theta_est,
+                     mmle_theta_est,
                      cmle_theta_est,
                      eap_theta_est)
 
-      condition_3_estimates[[i+offset]] = list(Condition = condition_name, Theta = thetas)
-      condition_3_responses[[i+offset]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
+      condition_3_estimates[[iter_count]] = list(Condition = condition_name, Theta = thetas)
+      condition_3_responses[[iter_count]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
 
-      offset = offset + 1
+      iter_count = iter_count + 1
     }
     
   }
@@ -588,16 +610,19 @@ for (j in number_items) {
 saveRDS(condition_3_estimates, file = estimates_file_name)
 saveRDS(condition_3_responses, file = responses_file_name)
 
+rm(list = c('condition_3_estimates', 'condition_3_responses'))
 ```
+
 
 
 ### -2 Item +2 Theta
 
 ```{r condition-4}
-#| eval: true
+#| eval: false
 #| output: false
+#| echo: true
 # Conditions 55-72 Parameters
-Start.time = Sys.time()
+
 
 m_item = -2; m_person = 2
 sd_item = sd_person = 1
@@ -606,7 +631,7 @@ responses_file_name = 'simdata/04_large_mismatch_responses.RDS'
 
 condition_4_estimates = vector(mode = 'list', length = 18*iter)
 condition_4_responses = vector(mode = 'list', length = 18*iter)
-offset = 0
+iter_count = 1
 
 for (j in number_items) {
   print(paste0("Items: ", j))
@@ -687,13 +712,14 @@ for (j in number_items) {
       thetas = cbind(person_theta,
                      prox_theta_est,
                      jmle_theta_est,
+                     mmle_theta_est,
                      cmle_theta_est,
                      eap_theta_est)
 
-      condition_4_estimates[[i+offset]] = list(Condition = condition_name, Theta = thetas)
-      condition_4_responses[[i+offset]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
+      condition_4_estimates[[iter_count]] = list(Condition = condition_name, Theta = thetas)
+      condition_4_responses[[iter_count]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
 
-      offset = offset + 1
+      iter_count = iter_count + 1
     }
     
   }
@@ -703,15 +729,19 @@ for (j in number_items) {
 saveRDS(condition_4_estimates, file = estimates_file_name)
 saveRDS(condition_4_responses, file = responses_file_name)
 
+rm(list = c('condition_4_estimates', 'condition_4_responses'))
 ```
+
+
 
 ### -3 Item +3 Theta
 
 ```{r condition-5}
-#| eval: true
+#| eval: false
 #| output: false
+#| echo: true
 # Conditions 73-90 Parameters
-Start.time = Sys.time()
+
 
 m_item = -3; m_person = 3
 sd_item = sd_person = 1
@@ -720,7 +750,7 @@ responses_file_name = 'simdata/05_extreme_mismatch_responses.RDS'
 
 condition_5_estimates = vector(mode = 'list', length = 18*iter)
 condition_5_responses = vector(mode = 'list', length = 18*iter)
-offset = 0
+iter_count = 1
 
 for (j in number_items) {
   print(paste0("Items: ", j))
@@ -801,13 +831,14 @@ for (j in number_items) {
       thetas = cbind(person_theta,
                      prox_theta_est,
                      jmle_theta_est,
+                     mmle_theta_est,
                      cmle_theta_est,
                      eap_theta_est)
 
-      condition_5_estimates[[i+offset]] = list(Condition = condition_name, Theta = thetas)
-      condition_5_responses[[i+offset]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
+      condition_5_estimates[[iter_count]] = list(Condition = condition_name, Theta = thetas)
+      condition_5_responses[[iter_count]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
 
-      offset = offset + 1
+      iter_count = iter_count + 1
     }
     
   }
@@ -817,15 +848,19 @@ for (j in number_items) {
 saveRDS(condition_5_estimates, file = estimates_file_name)
 saveRDS(condition_5_responses, file = responses_file_name)
 
+rm(list = c('condition_5_estimates', 'condition_5_responses'))
 ```
+
+
 
 ### Normal Item, Bimodal Theta
 
 ```{r condition-6}
-#| eval: true
+#| eval: false
 #| output: false
+#| echo: true
 # Conditions 73-90 Parameters
-Start.time = Sys.time()
+
 
 m_item = 0; m_person_1 = -1.5; m_person_2 = 1.5
 sd_item = 1; sd_person = 0.5
@@ -834,7 +869,7 @@ responses_file_name = 'simdata/06_bimodal_persons_responses.RDS'
 
 condition_6_estimates = vector(mode = 'list', length = 18*iter)
 condition_6_responses = vector(mode = 'list', length = 18*iter)
-offset = 0
+iter_count = 1
 
 for (j in number_items) {
   print(paste0("Items: ", j))
@@ -915,13 +950,14 @@ for (j in number_items) {
       thetas = cbind(person_theta,
                      prox_theta_est,
                      jmle_theta_est,
+                     mmle_theta_est,
                      cmle_theta_est,
                      eap_theta_est)
 
-      condition_6_estimates[[i+offset]] = list(Condition = condition_name, Theta = thetas)
-      condition_6_responses[[i+offset]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
+      condition_6_estimates[[iter_count]] = list(Condition = condition_name, Theta = thetas)
+      condition_6_responses[[iter_count]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
 
-      offset = offset + 1
+      iter_count = iter_count + 1
     }
     
   }
@@ -929,24 +965,29 @@ for (j in number_items) {
 
 saveRDS(condition_6_estimates, file = estimates_file_name)
 saveRDS(condition_6_responses, file = responses_file_name)
+
+rm(list = c('condition_6_estimates', 'condition_6_responses'))
 ```
+
+
 
 ### Bimodal Item, Normal Theta
 
-```{r condition-6}
-#| eval: true
+```{r condition-7}
+#| eval: false
 #| output: false
+#| echo: true
 # Conditions 73-90 Parameters
-Start.time = Sys.time()
+
 
 m_item_1 = -1.5; m_item_2 = 1.5; m_person = 0
 sd_item = 0.5; sd_person = 1
-estimates_file_name = 'simdata/06_bimodal_persons_estimates.RDS'
-responses_file_name = 'simdata/06_bimodal_persons_responses.RDS'
+estimates_file_name = 'simdata/07_bimodal_items_estimates.RDS'
+responses_file_name = 'simdata/07_bimodal_items_responses.RDS'
 
-condition_6_estimates = vector(mode = 'list', length = 18*iter)
-condition_6_responses = vector(mode = 'list', length = 18*iter)
-offset = 0
+condition_7_estimates = vector(mode = 'list', length = 18*iter)
+condition_7_responses = vector(mode = 'list', length = 18*iter)
+iter_count = 1
 
 for (j in number_items) {
   print(paste0("Items: ", j))
@@ -1027,13 +1068,14 @@ for (j in number_items) {
       thetas = cbind(person_theta,
                      prox_theta_est,
                      jmle_theta_est,
+                     mmle_theta_est,
                      cmle_theta_est,
                      eap_theta_est)
 
-      condition_7_estimates[[i+offset]] = list(Condition = condition_name, Theta = thetas)
-      condition_7_responses[[i+offset]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
+      condition_7_estimates[[iter_count]] = list(Condition = condition_name, Theta = thetas)
+      condition_7_responses[[iter_count]] = list(Condition = condition_name, ItemDiff = item_diff, Responses = responses)
 
-      offset = offset + 1
+      iter_count = iter_count + 1
     }
     
   }
@@ -1041,7 +1083,11 @@ for (j in number_items) {
 
 saveRDS(condition_7_estimates, file = estimates_file_name)
 saveRDS(condition_7_responses, file = responses_file_name)
+
+rm(list = c('condition_7_estimates', 'condition_7_responses'))
 ```
+
+
 
 ## Analyzing the data
 
@@ -1060,81 +1106,134 @@ Using the "point estimate" for each condition as the DV, an ANOVA/LR can be used
 ## Correlation
 
 ```{r correlation-between-estimates}
-#| eval: false
-
+#| eval: true
 
 mean_corr_list <- function(x) {
-  Reduce("+", x) / length(x)
+  y <- list(Reduce("+", x) / length(x))
+  
+  y %>% 
+    as.data.frame() %>%
+    pivot_longer(cols = everything(), names_to = 'x_value', values_to = 'MeanCorrelation') %>% 
+    add_column('y_value' = rep(c('person_theta', 'prox_theta_est', 'jmle_theta_est', 'mmle_theta_est', 'cmle_theta_est', 'eap_theta_est'), each = 6), .before = 2) %>%
+    list()
 }
 
 estimates_files_list <-
-  paste0('simdata/', conditions$filename)
-# short_file <-
-#   list.files('simdata/', pattern = 'estimates')
+  list.files('simdata/', pattern = 'estimates', full.names = T)
 
 loaded_estimates <-
   readRDS(estimates_files_list[1])
 
 mean_correlation <-
   loaded_estimates %>%
-  purrr::map('thetas') %>%
-  purrr::map(cor) %>%
-  mean_corr_list() %>% 
-  as_tibble() %>%
-  mutate(Condition = conditions$Condition[1], .before = 1) %>%
-  mutate(Estimate = c("person_theta", "prox_theta_est", "jmle_theta_est", "cmle_theta_est", "eap_theat_est"), .after = 1) 
+  purrr::map('Condition') %>%
+  bind_rows() %>%
+  mutate(across(everything(), as.character)) %>%
+  mutate(
+    Correlation =
+      loaded_estimates %>%
+      purrr::map('Theta') %>%
+      purrr::map(cor) %>%
+      purrr::map(\(x) ifelse(is.na(x), 0, x))
+  ) %>%
+  group_by(
+    Title, ItemMean, ItemSD, PersonMean, PersonSD, N_Items, N_Person
+  ) %>%
+  mutate(
+    Mean_Correlation = Correlation %>% mean_corr_list() 
+    )
 
 for (i in 2:length(estimates_files_list)) {
   loaded_estimates <-
-    readRDS(estimates_files_list[i])
-  test <-
-    tryCatch(
-      loaded_estimates %>%
-        purrr::map('thetas') %>%
-        purrr::map(as_tibble) %>%
-        purrr::map(~.x %>% mutate_all(~ case_when((. == -Inf)|(is.na(.) & (sign(person_theta) == -1)) ~ -4, (. == Inf)|(is.na(.) & (sign(person_theta) == 1)) ~ 4, TRUE ~ .))) %>%
-        purrr::map(cor) %>%
-        mean_corr_list() %>% 
-        as_tibble() %>%
-        mutate(Condition = conditions$Condition[i], .before = 1) %>%
-        mutate(Estimate = c("person_theta", "prox_theta_est", "jmle_theta_est", "cmle_theta_est", "eap_theat_est"), .after = 1)
-        ,
-      error = function(e)
-        'error'
+  readRDS(estimates_files_list[i])
+  
+  mean_correlation <-
+    bind_rows(
+      mean_correlation
+      , loaded_estimates %>%
+          purrr::map('Condition') %>%
+          bind_rows() %>%
+          mutate(across(everything(), as.character)) %>%
+          mutate(
+            Correlation =
+              loaded_estimates %>%
+              purrr::map('Theta') %>%
+              purrr::map(cor) %>%
+              purrr::map(\(x) ifelse(is.na(x), 0, x))
+          ) %>%
+          group_by(
+            Title, ItemMean, ItemSD, PersonMean, PersonSD, N_Items, N_Person
+          ) %>%
+          mutate(Mean_Correlation = Correlation %>% mean_corr_list())
     )
-  if ('tbl' %in% class(test)) {
-    mean_correlation <-
-      mean_correlation %>%
-      bind_rows(
-        test
-      )
-  } else
-    if (test == 'error') {
-    mean_correlation <-
-      mean_correlation %>%
-      bind_rows(
-        loaded_estimates %>%
-          purrr::map(as_tibble) %>%
-          purrr::map(~.x %>% mutate_all(~ case_when((. == -Inf)|(is.na(.) & (sign(person_theta) == -1)) ~ -4, (. == Inf)|(is.na(.) & (sign(person_theta) == 1)) ~ 4, TRUE ~ .))) %>%
-          purrr::map(cor) %>%
-          mean_corr_list() %>%
-          as_tibble() %>%
-          mutate(Condition = conditions$Condition[i], .before = 1) %>%
-          mutate(Estimate = c("person_theta", "prox_theta_est", "jmle_theta_est", "cmle_theta_est", "eap_theat_est"), .after = 1)
-      )
-  } else {
-    stop("Something went wrong.")
   }
-}
 
 mean_correlation %>%
-  select(-person_theta) %>%
+  dplyr::select(-Correlation) %>%
+  distinct() %>%
   saveRDS('results/00_mean_correlation.RDS')
+```
+
+```{r plot-mean-correlations-persons}
+#| eval: true
+#| fig-cap: "Mean Correlations Across Iterations by Mismatch Type and Number of Persons"
+#| fig-dpi: 300
+mean_correlation <-
+  readRDS('results/00_mean_correlation.RDS')
+title_factor =
+  c(
+    "Standard Normal", "Wide Normal",  "Bimodal Persons", "Bimodal Items",
+    "Small Mismatch", "Large Mismatch", "Extreme Mismatch"
+  )
+
+mean_correlation %>%
+  unnest(Mean_Correlation) %>%
+  mutate(
+    Title = fct(Title, levels = title_factor)
+    , N_Person = fct(N_Person, levels = c('25', '50', '100', '200', '500', '1000'))
+    , x_value = str_remove(x_value, "_est")
+    , y_value = str_remove(y_value, "_est")
+    , x_value = fct(x_value, levels = c('person_theta', 'prox_theta', "jmle_theta", "cmle_theta", "mmle_theta", "eap_theta"))
+    , y_value = fct(y_value, levels = c('person_theta', 'prox_theta', "jmle_theta", "cmle_theta", "mmle_theta", "eap_theta"))
+    ) %>%
+  ggplot() +
+  geom_tile(
+    aes(x = x_value, y = y_value, fill = MeanCorrelation)
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 65, vjust = 1, hjust = 1)) +
+  scale_fill_gradient(low="black", high="white") +
+  facet_wrap(~Title + N_Person, ncol = 6, labeller = label_wrap_gen(multi_line=FALSE))
+```
+
+```{r plot-mean-correlations-items}
+#| eval: true
+#| fig-cap: "Mean Correlations Across Iterations by Mismatch Type and Number of Items"
+
+
+mean_correlation %>%
+  unnest(Mean_Correlation) %>%
+  mutate(
+    Title = fct(Title, levels = title_factor)
+    , N_Person = fct(N_Person, levels = c('25', '50', '100', '200', '500', '1000'))
+    , x_value = str_remove(x_value, "_est")
+    , y_value = str_remove(y_value, "_est")
+    , x_value = fct(x_value, levels = c('person_theta', 'prox_theta', "jmle_theta", "cmle_theta", "mmle_theta", "eap_theta"))
+    , y_value = fct(y_value, levels = c('person_theta', 'prox_theta', "jmle_theta", "cmle_theta", "mmle_theta", "eap_theta"))
+    ) %>%
+  ggplot() +
+  geom_tile(
+    aes(x = x_value, y = y_value, fill = MeanCorrelation)
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 65, vjust = 1, hjust = 1)) +
+  scale_fill_gradient(low="black", high="white") +
+  facet_wrap(~Title + N_Items, ncol = 3, labeller = label_wrap_gen(multi_line=FALSE))
 ```
 ## "Point-Estimate"
 ### "Point-Estimate" functions
 ```{r analysis-critera-function}
-#| eval: false
+#| eval: true
 
 bias_estimator = function(data) {
   true_theta = data[,1]
@@ -1146,14 +1245,33 @@ bias_estimator = function(data) {
     mutate(
       prox_theta_est =
         case_when(
-          prox_theta_est == Inf | prox_theta_est > 4 ~ 4
-          , prox_theta_est == -Inf | prox_theta_est < -4 ~ -4
+          prox_theta_est == Inf | prox_theta_est > 6 ~ 6
+          , prox_theta_est == -Inf | prox_theta_est < -6 ~ -6
           , TRUE ~ prox_theta_est
         )
       , cmle_theta_est =
         case_when(
-          cmle_theta_est == Inf | cmle_theta_est > 4 ~ 4
-          , cmle_theta_est == -Inf | cmle_theta_est < -4 ~ -4
+          cmle_theta_est == Inf | cmle_theta_est > 6 ~ 6
+          , cmle_theta_est == -Inf | cmle_theta_est < -6 ~ -6
+          , TRUE ~ cmle_theta_est
+        )
+      , jmle_theta_est =
+        case_when(
+          jmle_theta_est == Inf | jmle_theta_est > 6 ~ 6
+          , jmle_theta_est == -Inf | jmle_theta_est < -6 ~ -6
+          , TRUE ~ jmle_theta_est
+        )
+      , mmle_theta_est =
+        case_when(
+          mmle_theta_est == Inf | mmle_theta_est > 6 ~ 6
+          , mmle_theta_est == -Inf | mmle_theta_est < -6 ~ -6
+          , TRUE ~ mmle_theta_est
+        )
+      , eap_theta_est =
+        case_when(
+          eap_theta_est == Inf | eap_theta_est > 6 ~ 6
+          , eap_theta_est == -Inf | eap_theta_est < -6 ~ -6
+          , TRUE ~ eap_theta_est
         )
     ) 
   
@@ -1179,26 +1297,32 @@ mad_estimator = function(data) {
     mutate(
       prox_theta_est =
         case_when(
-          prox_theta_est == Inf | prox_theta_est > 4 ~ 4
-          , prox_theta_est == -Inf | prox_theta_est < -4 ~ -4
+          prox_theta_est == Inf | prox_theta_est > 6 ~ 6
+          , prox_theta_est == -Inf | prox_theta_est < -6 ~ -6
           , TRUE ~ prox_theta_est
         )
       , cmle_theta_est =
         case_when(
-          cmle_theta_est == Inf | cmle_theta_est > 4 ~ 4
-          , cmle_theta_est == -Inf | cmle_theta_est < -4 ~ -4
+          cmle_theta_est == Inf | cmle_theta_est > 6 ~ 6
+          , cmle_theta_est == -Inf | cmle_theta_est < -6 ~ -6
           , TRUE ~ cmle_theta_est
         )
       , jmle_theta_est =
         case_when(
-          jmle_theta_est == Inf | jmle_theta_est > 4 ~ 4
-          , jmle_theta_est == -Inf | jmle_theta_est < -4 ~ -4
+          jmle_theta_est == Inf | jmle_theta_est > 6 ~ 6
+          , jmle_theta_est == -Inf | jmle_theta_est < -6 ~ -6
           , TRUE ~ jmle_theta_est
+        )
+      , mmle_theta_est =
+        case_when(
+          mmle_theta_est == Inf | mmle_theta_est > 6 ~ 6
+          , mmle_theta_est == -Inf | mmle_theta_est < -6 ~ -6
+          , TRUE ~ mmle_theta_est
         )
       , eap_theta_est =
         case_when(
-          eap_theta_est == Inf | eap_theta_est > 4 ~ 4
-          , eap_theta_est == -Inf | eap_theta_est < -4 ~ -4
+          eap_theta_est == Inf | eap_theta_est > 6 ~ 6
+          , eap_theta_est == -Inf | eap_theta_est < -6 ~ -6
           , TRUE ~ eap_theta_est
         )
     ) 
@@ -1209,7 +1333,7 @@ mad_estimator = function(data) {
     
     mad = c(mad, mad_est)
   }
-  names(mad) = paste0(colnames(data)[-1], "_mad")
+  names(mad) = paste0(colnames(data)[-1], "_MAD")
   return(mad)
 }
 
@@ -1223,26 +1347,32 @@ mse_estimator = function(data) {
     mutate(
       prox_theta_est =
         case_when(
-          prox_theta_est == Inf | prox_theta_est > 4 ~ 4
-          , prox_theta_est == -Inf | prox_theta_est < -4 ~ -4
+          prox_theta_est == Inf | prox_theta_est > 6 ~ 6
+          , prox_theta_est == -Inf | prox_theta_est < -6 ~ -6
           , TRUE ~ prox_theta_est
         )
       , cmle_theta_est =
         case_when(
-          cmle_theta_est == Inf | cmle_theta_est > 4 ~ 4
-          , cmle_theta_est == -Inf | cmle_theta_est < -4 ~ -4
+          cmle_theta_est == Inf | cmle_theta_est > 6 ~ 6
+          , cmle_theta_est == -Inf | cmle_theta_est < -6 ~ -6
           , TRUE ~ cmle_theta_est
         )
       , jmle_theta_est =
         case_when(
-          jmle_theta_est == Inf | jmle_theta_est > 4 ~ 4
-          , jmle_theta_est == -Inf | jmle_theta_est < -4 ~ -4
+          jmle_theta_est == Inf | jmle_theta_est > 6 ~ 6
+          , jmle_theta_est == -Inf | jmle_theta_est < -6 ~ -6
           , TRUE ~ jmle_theta_est
+        )
+      , mmle_theta_est =
+        case_when(
+          mmle_theta_est == Inf | mmle_theta_est > 6 ~ 6
+          , mmle_theta_est == -Inf | mmle_theta_est < -6 ~ -6
+          , TRUE ~ mmle_theta_est
         )
       , eap_theta_est =
         case_when(
-          eap_theta_est == Inf | eap_theta_est > 4 ~ 4
-          , eap_theta_est == -Inf | eap_theta_est < -4 ~ -4
+          eap_theta_est == Inf | eap_theta_est > 6 ~ 6
+          , eap_theta_est == -Inf | eap_theta_est < -6 ~ -6
           , TRUE ~ eap_theta_est
         )
     ) 
@@ -1254,7 +1384,7 @@ mse_estimator = function(data) {
     mse = c(mse, mse_est)
   }
   
-  names(mse) = paste0(colnames(data)[-1], "_mse")
+  names(mse) = paste0(colnames(data)[-1], "_MSE")
   
   return(mse)
 }
@@ -1269,26 +1399,32 @@ rmse_estimator = function(data) {
     mutate(
       prox_theta_est =
         case_when(
-          prox_theta_est == Inf | prox_theta_est > 4 ~ 4
-          , prox_theta_est == -Inf | prox_theta_est < -4 ~ -4
+          prox_theta_est == Inf | prox_theta_est > 6 ~ 6
+          , prox_theta_est == -Inf | prox_theta_est < -6 ~ -6
           , TRUE ~ prox_theta_est
         )
       , cmle_theta_est =
         case_when(
-          cmle_theta_est == Inf | cmle_theta_est > 4 ~ 4
-          , cmle_theta_est == -Inf | cmle_theta_est < -4 ~ -4
+          cmle_theta_est == Inf | cmle_theta_est > 6 ~ 6
+          , cmle_theta_est == -Inf | cmle_theta_est < -6 ~ -6
           , TRUE ~ cmle_theta_est
         )
       , jmle_theta_est =
         case_when(
-          jmle_theta_est == Inf | jmle_theta_est > 4 ~ 4
-          , jmle_theta_est == -Inf | jmle_theta_est < -4 ~ -4
+          jmle_theta_est == Inf | jmle_theta_est > 6 ~ 6
+          , jmle_theta_est == -Inf | jmle_theta_est < -6 ~ -6
           , TRUE ~ jmle_theta_est
+        )
+      , mmle_theta_est =
+        case_when(
+          mmle_theta_est == Inf | mmle_theta_est > 6 ~ 6
+          , mmle_theta_est == -Inf | mmle_theta_est < -6 ~ -6
+          , TRUE ~ mmle_theta_est
         )
       , eap_theta_est =
         case_when(
-          eap_theta_est == Inf | eap_theta_est > 4 ~ 4
-          , eap_theta_est == -Inf | eap_theta_est < -4 ~ -4
+          eap_theta_est == Inf | eap_theta_est > 6 ~ 6
+          , eap_theta_est == -Inf | eap_theta_est < -6 ~ -6
           , TRUE ~ eap_theta_est
         )
     ) 
@@ -1300,7 +1436,7 @@ rmse_estimator = function(data) {
     rmse = c(rmse, rmse_est)
   }
   
-  names(rmse) = paste0(colnames(data)[-1], "_rmse")
+  names(rmse) = paste0(colnames(data)[-1], "_RMSE")
 
   return(rmse)
 }
@@ -1329,75 +1465,83 @@ loaded_estimates <-
 
 all_bias_estimates <-
   loaded_estimates %>%
-  purrr::map('thetas') %>%
-  purrr::map(bias_estimator) %>% 
+  purrr::map('Condition') %>%
   bind_rows() %>%
-  mutate(filename = estimates_files_list[1] %>% str_remove("simdata/")) %>% 
-  left_join(conditions)
+  mutate(across(everything(), as.character)) %>%
+  mutate(
+    Theta =
+      loaded_estimates %>%
+      purrr::map('Theta')
+  ) %>%
+  group_by(
+    Title, ItemMean, ItemSD, PersonMean, PersonSD, N_Items, N_Person
+  ) %>%
+  mutate(
+    Mean_Bias_Iteration = Theta %>% purrr::map(bias_estimator)
+    ) %>%
+  unnest_wider(Mean_Bias_Iteration) %>%
+  mutate(
+    Mean_Bias_Prox   = mean(prox_theta_est_bias)
+    , Mean_Bias_JMLE = mean(jmle_theta_est_bias)
+    , Mean_Bias_MMLE = mean(mmle_theta_est_bias)
+    , Mean_Bias_CMLE = mean(cmle_theta_est_bias)
+    , Mean_Bias_EAP  = mean(eap_theta_est_bias)
+    , SD_Bias_Prox   = sd(prox_theta_est_bias)
+    , SD_Bias_JMLE   = sd(jmle_theta_est_bias)
+    , SD_Bias_MMLE   = sd(mmle_theta_est_bias)
+    , SD_Bias_CMLE   = sd(cmle_theta_est_bias)
+    , SD_Bias_EAP    = sd(eap_theta_est_bias)
+  ) 
 
 for (i in 2:length(estimates_files_list)) {
   loaded_estimates <-
     readRDS(estimates_files_list[i])
-  test <-
-    tryCatch(
-      purrr:::map(loaded_estimates, 'thetas') %>%
-        purrr::map(bias_estimator)
-        ,
-      error = function(e)
-        'error'
+  all_bias_estimates <-
+    bind_rows(
+      all_bias_estimates
+      , loaded_estimates %>%
+        purrr::map('Condition') %>%
+        bind_rows() %>%
+        mutate(across(everything(), as.character)) %>%
+        mutate(
+          Theta =
+            loaded_estimates %>%
+            purrr::map('Theta')
+        ) %>%
+        group_by(
+          Title, ItemMean, ItemSD, PersonMean, PersonSD, N_Items, N_Person
+        ) %>%
+        mutate(
+          Mean_Bias_Iteration = Theta %>% purrr::map(bias_estimator)
+          ) %>%
+        unnest_wider(Mean_Bias_Iteration) %>%
+        mutate(
+          Mean_Bias_Prox   = mean(prox_theta_est_bias)
+          , Mean_Bias_JMLE = mean(jmle_theta_est_bias)
+          , Mean_Bias_MMLE = mean(mmle_theta_est_bias)
+          , Mean_Bias_CMLE = mean(cmle_theta_est_bias)
+          , Mean_Bias_EAP  = mean(eap_theta_est_bias)
+          , SD_Bias_Prox   = sd(prox_theta_est_bias)
+          , SD_Bias_JMLE   = sd(jmle_theta_est_bias)
+          , SD_Bias_MMLE   = sd(mmle_theta_est_bias)
+          , SD_Bias_CMLE   = sd(cmle_theta_est_bias)
+          , SD_Bias_EAP    = sd(eap_theta_est_bias)
+        ) 
     )
-  if (class(test) == 'list') {
-    all_bias_estimates <-
-      all_bias_estimates %>%
-      bind_rows(
-        purrr::map(loaded_estimates, 'thetas') %>%
-          purrr::map(bias_estimator) %>%
-          bind_rows() %>%
-          mutate(filename = estimates_files_list[i] %>% str_remove("simdata/")) %>%
-          left_join(conditions)
-      )
-  } else if (test == 'error') {
-    all_bias_estimates <-
-      all_bias_estimates %>%
-      bind_rows(
-        loaded_estimates %>%   
-          purrr:::map(bias_estimator) %>%
-          bind_rows() %>%
-          mutate(filename = estimates_files_list[i] %>% str_remove("simdata/")) %>%
-          left_join(conditions)
-      )
-  } else {
-    stop("Something went wrong.")
-  }
-  
 }
 
-mean_bias_by_condition <-
-  all_bias_estimates %>% 
-  group_by(Condition) %>% 
-  summarize(
-    across(contains("_bias"), \(x) sum(!is.na(x)), .names = "n_{.col}")
-    , across(contains("_bias"), \(x) mean(x, na.rm = TRUE), .names = "mean_{.col}")
-            ) %>%
-  select(-contains("mean_n_"))
-
-se_bias_by_condition <-
-  all_bias_estimates %>%
-  group_by(Condition) %>%
-  summarize(
-    across(contains("_bias"), \(x) sum(!is.na(x)), .names = "n_{.col}")
-    , across(contains("_bias"), \(x) se_estimator(x), .names = "se_{.col}")
-  ) %>%
-  select(-contains("se_n_"))
-  
-
 all_bias_estimates %>%
+  dplyr::select(contains("_est_")) %>%
   saveRDS("results/01_all_bias_estimates.RDS")
 
-mean_bias_by_condition %>%
+all_bias_estimates %>%
+  dplyr::select(contains("Mean_")) %>%
+  distinct() %>%
   saveRDS("results/01_mean_bias_by_condition.RDS")
 
-se_bias_by_condition %>%
+all_bias_estimates %>%
+  dplyr::select(contains("SD_")) %>%
+  distinct() %>%
   saveRDS('results/01_se_bias_estimates.RDS')
 
 ```
@@ -1411,75 +1555,83 @@ loaded_estimates <-
 
 all_mad_estimates <-
   loaded_estimates %>%
-  purrr::map('thetas') %>%
-  purrr::map(mad_estimator) %>% 
+  purrr::map('Condition') %>%
   bind_rows() %>%
-  mutate(filename = estimates_files_list[1] %>% str_remove("simdata/")) %>% 
-  left_join(conditions)
+  mutate(across(everything(), as.character)) %>%
+  mutate(
+    Theta =
+      loaded_estimates %>%
+      purrr::map('Theta')
+  ) %>%
+  group_by(
+    Title, ItemMean, ItemSD, PersonMean, PersonSD, N_Items, N_Person
+  ) %>%
+  mutate(
+    Mean_MAD_Iteration = Theta %>% purrr::map(mad_estimator)
+    ) %>%
+  unnest_wider(Mean_MAD_Iteration) %>%
+  mutate(
+    Mean_MAD_Prox   = mean(prox_theta_est_MAD)
+    , Mean_MAD_JMLE = mean(jmle_theta_est_MAD)
+    , Mean_MAD_MMLE = mean(mmle_theta_est_MAD)
+    , Mean_MAD_CMLE = mean(cmle_theta_est_MAD)
+    , Mean_MAD_EAP  = mean(eap_theta_est_MAD)
+    , SD_MAD_Prox   = sd(prox_theta_est_MAD)
+    , SD_MAD_JMLE   = sd(jmle_theta_est_MAD)
+    , SD_MAD_MMLE   = sd(mmle_theta_est_MAD)
+    , SD_MAD_CMLE   = sd(cmle_theta_est_MAD)
+    , SD_MAD_EAP    = sd(eap_theta_est_MAD)
+  ) 
 
 for (i in 2:length(estimates_files_list)) {
   loaded_estimates <-
     readRDS(estimates_files_list[i])
-  test <-
-    tryCatch(
-      purrr:::map(loaded_estimates, 'thetas') %>%
-        purrr::map(mad_estimator)
-        ,
-      error = function(e)
-        'error'
+  all_mad_estimates <-
+    bind_rows(
+      all_mad_estimates
+      , loaded_estimates %>%
+        purrr::map('Condition') %>%
+        bind_rows() %>%
+        mutate(across(everything(), as.character)) %>%
+        mutate(
+          Theta =
+            loaded_estimates %>%
+            purrr::map('Theta')
+        ) %>%
+        group_by(
+          Title, ItemMean, ItemSD, PersonMean, PersonSD, N_Items, N_Person
+        ) %>%
+        mutate(
+          Mean_MAD_Iteration = Theta %>% purrr::map(mad_estimator)
+        ) %>%
+        unnest_wider(Mean_MAD_Iteration) %>%
+        mutate(
+          Mean_MAD_Prox   = mean(prox_theta_est_MAD)
+          , Mean_MAD_JMLE = mean(jmle_theta_est_MAD)
+          , Mean_MAD_MMLE = mean(mmle_theta_est_MAD)
+          , Mean_MAD_CMLE = mean(cmle_theta_est_MAD)
+          , Mean_MAD_EAP  = mean(eap_theta_est_MAD)
+          , SD_MAD_Prox   = sd(prox_theta_est_MAD)
+          , SD_MAD_JMLE   = sd(jmle_theta_est_MAD)
+          , SD_MAD_MMLE   = sd(mmle_theta_est_MAD)
+          , SD_MAD_CMLE   = sd(cmle_theta_est_MAD)
+          , SD_MAD_EAP    = sd(eap_theta_est_MAD)
+        ) 
     )
-  if (class(test) == 'list') {
-    all_mad_estimates <-
-      all_mad_estimates %>%
-      bind_rows(
-        purrr::map(loaded_estimates, 'thetas') %>%
-          purrr::map(mad_estimator) %>%
-          bind_rows() %>%
-          mutate(filename = estimates_files_list[i] %>% str_remove("simdata/")) %>%
-          left_join(conditions)
-      )
-  } else if (test == 'error') {
-    all_mad_estimates <-
-      all_mad_estimates %>%
-      bind_rows(
-        loaded_estimates %>%   
-          purrr:::map(mad_estimator) %>%
-          bind_rows() %>%
-          mutate(filename = estimates_files_list[i] %>% str_remove("simdata/")) %>%
-          left_join(conditions)
-      )
-  } else {
-    stop("Something went wrong.")
-  }
-  
 }
 
-mean_mad_by_condition <-
-  all_mad_estimates %>% 
-  group_by(Condition) %>% 
-  summarize(
-    across(contains("_mad"), \(x) sum(!is.na(x)), .names = "n_{.col}")
-    , across(contains("_mad"), \(x) mean(x, na.rm = TRUE), .names = "mean_{.col}")
-            ) %>%
-  select(-contains("mean_n_"))
-
-se_mad_by_condition <-
-  all_mad_estimates %>%
-  group_by(Condition) %>%
-  summarize(
-    across(contains("_mad"), \(x) sum(!is.na(x)), .names = "n_{.col}")
-    , across(contains("_mad"), \(x) se_estimator(x), .names = "se_{.col}")
-  ) %>%
-  select(-contains("se_n_"))
-
-
 all_mad_estimates %>%
+  dplyr::select(contains("_est_")) %>%
   saveRDS("results/02_all_mad_estimates.RDS")
 
-mean_mad_by_condition %>%
+all_mad_estimates %>%
+  dplyr::select(contains("Mean_")) %>%
+  distinct() %>%
   saveRDS("results/02_mean_mad_by_condition.RDS")
 
-se_mad_by_condition %>%
+all_mad_estimates %>%
+  dplyr::select(contains("SD_")) %>%
+  distinct() %>%
   saveRDS("results/02_se_mad_by_condition.RDS")
 ```
 
@@ -1492,75 +1644,83 @@ loaded_estimates <-
 
 all_mse_estimates <-
   loaded_estimates %>%
-  purrr::map('thetas') %>%
-  purrr::map(mse_estimator) %>% 
+  purrr::map('Condition') %>%
   bind_rows() %>%
-  mutate(filename = estimates_files_list[1] %>% str_remove("simdata/")) %>% 
-  left_join(conditions)
+  mutate(across(everything(), as.character)) %>%
+  mutate(
+    Theta =
+      loaded_estimates %>%
+      purrr::map('Theta')
+  ) %>%
+  group_by(
+    Title, ItemMean, ItemSD, PersonMean, PersonSD, N_Items, N_Person
+  ) %>%
+  mutate(
+    Mean_MSE_Iteration = Theta %>% purrr::map(mse_estimator)
+    ) %>%
+  unnest_wider(Mean_MSE_Iteration) %>%
+  mutate(
+    Mean_MSE_Prox   = mean(prox_theta_est_MSE)
+    , Mean_MSE_JMLE = mean(jmle_theta_est_MSE)
+    , Mean_MSE_MMLE = mean(mmle_theta_est_MSE)
+    , Mean_MSE_CMLE = mean(cmle_theta_est_MSE)
+    , Mean_MSE_EAP  = mean(eap_theta_est_MSE)
+    , SD_MSE_Prox   = sd(prox_theta_est_MSE)
+    , SD_MSE_JMLE   = sd(jmle_theta_est_MSE)
+    , SD_MSE_MMLE   = sd(mmle_theta_est_MSE)
+    , SD_MSE_CMLE   = sd(cmle_theta_est_MSE)
+    , SD_MSE_EAP    = sd(eap_theta_est_MSE)
+  ) 
 
 for (i in 2:length(estimates_files_list)) {
   loaded_estimates <-
     readRDS(estimates_files_list[i])
-  test <-
-    tryCatch(
-      purrr:::map(loaded_estimates, 'thetas') %>%
-        purrr::map(mse_estimator)
-        ,
-      error = function(e)
-        'error'
+  all_mse_estimates <-
+    bind_rows(
+      all_mse_estimates
+      , loaded_estimates %>%
+        purrr::map('Condition') %>%
+        bind_rows() %>%
+        mutate(across(everything(), as.character)) %>%
+        mutate(
+          Theta =
+            loaded_estimates %>%
+            purrr::map('Theta')
+        ) %>%
+        group_by(
+          Title, ItemMean, ItemSD, PersonMean, PersonSD, N_Items, N_Person
+        ) %>%
+        mutate(
+          Mean_MSE_Iteration = Theta %>% purrr::map(mse_estimator)
+        ) %>%
+        unnest_wider(Mean_MSE_Iteration) %>%
+        mutate(
+          Mean_MSE_Prox   = mean(prox_theta_est_MSE)
+          , Mean_MSE_JMLE = mean(jmle_theta_est_MSE)
+          , Mean_MSE_MMLE = mean(mmle_theta_est_MSE)
+          , Mean_MSE_CMLE = mean(cmle_theta_est_MSE)
+          , Mean_MSE_EAP  = mean(eap_theta_est_MSE)
+          , SD_MSE_Prox   = sd(prox_theta_est_MSE)
+          , SD_MSE_JMLE   = sd(jmle_theta_est_MSE)
+          , SD_MSE_MMLE   = sd(mmle_theta_est_MSE)
+          , SD_MSE_CMLE   = sd(cmle_theta_est_MSE)
+          , SD_MSE_EAP    = sd(eap_theta_est_MSE)
+        ) 
     )
-  if (class(test) == 'list') {
-    all_mse_estimates <-
-      all_mse_estimates %>%
-      bind_rows(
-        purrr::map(loaded_estimates, 'thetas') %>%
-          purrr::map(mse_estimator) %>%
-          bind_rows() %>%
-          mutate(filename = estimates_files_list[i] %>% str_remove("simdata/")) %>%
-          left_join(conditions)
-      )
-  } else if (test == 'error') {
-    all_mse_estimates <-
-      all_mse_estimates %>%
-      bind_rows(
-        loaded_estimates %>%   
-          purrr:::map(mse_estimator) %>%
-          bind_rows() %>%
-          mutate(filename = estimates_files_list[i] %>% str_remove("simdata/")) %>%
-          left_join(conditions)
-      )
-  } else {
-    stop("Something went wrong.")
-  }
-  
 }
 
-mean_mse_by_condition <-
-  all_mse_estimates %>% 
-  group_by(Condition) %>% 
-  summarize(
-    across(contains("_mse"), \(x) sum(!is.na(x)), .names = "n_{.col}")
-    , across(contains("_mse"), \(x) mean(x, na.rm = TRUE), .names = "mean_{.col}")
-            ) %>%
-  select(-contains("mean_n_"))
-
-se_mse_by_condition <-
-  all_mse_estimates %>%
-  group_by(Condition) %>%
-  summarize(
-    across(contains("_mse"), \(x) sum(!is.na(x)), .names = "n_{.col}")
-    , across(contains("_mse"), \(x) se_estimator(x), .names = "se_{.col}")
-  ) %>%
-  select(-contains("se_n_"))
-  
-
 all_mse_estimates %>%
+  dplyr::select(contains("_est_")) %>%
   saveRDS("results/03_all_mse_estimates.RDS")
 
-mean_mse_by_condition %>%
+all_mse_estimates %>%
+  dplyr::select(contains("Mean_")) %>%
+  distinct() %>%
   saveRDS("results/03_mean_mse_by_condition.RDS")
 
-se_mse_by_condition %>%
+all_mse_estimates %>%
+  dplyr::select(contains("SD_")) %>%
+  distinct() %>%
   saveRDS('results/03_se_mse_estimates.RDS')
 
 ```
@@ -1574,83 +1734,97 @@ loaded_estimates <-
 
 all_rmse_estimates <-
   loaded_estimates %>%
-  purrr::map('thetas') %>%
-  purrr::map(rmse_estimator) %>% 
+  purrr::map('Condition') %>%
   bind_rows() %>%
-  mutate(filename = estimates_files_list[1] %>% str_remove("simdata/")) %>% 
-  left_join(conditions)
+  mutate(across(everything(), as.character)) %>%
+  mutate(
+    Theta =
+      loaded_estimates %>%
+      purrr::map('Theta')
+  ) %>%
+  group_by(
+    Title, ItemMean, ItemSD, PersonMean, PersonSD, N_Items, N_Person
+  ) %>%
+  mutate(
+    Mean_RMSE_Iteration = Theta %>% purrr::map(rmse_estimator)
+    ) %>%
+  unnest_wider(Mean_RMSE_Iteration) %>%
+  mutate(
+    Mean_RMSE_Prox   = mean(prox_theta_est_RMSE)
+    , Mean_RMSE_JMLE = mean(jmle_theta_est_RMSE)
+    , Mean_RMSE_MMLE = mean(mmle_theta_est_RMSE)
+    , Mean_RMSE_CMLE = mean(cmle_theta_est_RMSE)
+    , Mean_RMSE_EAP  = mean(eap_theta_est_RMSE)
+    , SD_RMSE_Prox   = sd(prox_theta_est_RMSE)
+    , SD_RMSE_JMLE   = sd(jmle_theta_est_RMSE)
+    , SD_RMSE_MMLE   = sd(mmle_theta_est_RMSE)
+    , SD_RMSE_CMLE   = sd(cmle_theta_est_RMSE)
+    , SD_RMSE_EAP    = sd(eap_theta_est_RMSE)
+  ) 
 
 for (i in 2:length(estimates_files_list)) {
   loaded_estimates <-
     readRDS(estimates_files_list[i])
-  test <-
-    tryCatch(
-      purrr:::map(loaded_estimates, 'thetas') %>%
-        purrr::map(rmse_estimator)
-        ,
-      error = function(e)
-        'error'
+  all_rmse_estimates <-
+    bind_rows(
+      all_rmse_estimates
+      , loaded_estimates %>%
+        purrr::map('Condition') %>%
+        bind_rows() %>%
+        mutate(across(everything(), as.character)) %>%
+        mutate(
+          Theta =
+            loaded_estimates %>%
+            purrr::map('Theta')
+        ) %>%
+        group_by(
+          Title, ItemMean, ItemSD, PersonMean, PersonSD, N_Items, N_Person
+        ) %>%
+        mutate(
+          Mean_RMSE_Iteration = Theta %>% purrr::map(rmse_estimator)
+        ) %>%
+        unnest_wider(Mean_RMSE_Iteration) %>%
+        mutate(
+          Mean_RMSE_Prox   = mean(prox_theta_est_RMSE)
+          , Mean_RMSE_JMLE = mean(jmle_theta_est_RMSE)
+          , Mean_RMSE_MMLE = mean(mmle_theta_est_RMSE)
+          , Mean_RMSE_CMLE = mean(cmle_theta_est_RMSE)
+          , Mean_RMSE_EAP  = mean(eap_theta_est_RMSE)
+          , SD_RMSE_Prox   = sd(prox_theta_est_RMSE)
+          , SD_RMSE_JMLE   = sd(jmle_theta_est_RMSE)
+          , SD_RMSE_MMLE   = sd(mmle_theta_est_RMSE)
+          , SD_RMSE_CMLE   = sd(cmle_theta_est_RMSE)
+          , SD_RMSE_EAP    = sd(eap_theta_est_RMSE)
+        ) 
     )
-  if (class(test) == 'list') {
-    all_rmse_estimates <-
-      all_rmse_estimates %>%
-      bind_rows(
-        purrr::map(loaded_estimates, 'thetas') %>%
-          purrr::map(rmse_estimator) %>%
-          bind_rows() %>%
-          mutate(filename = estimates_files_list[i] %>% str_remove("simdata/")) %>%
-          left_join(conditions)
-      )
-  } else if (test == 'error') {
-    all_rmse_estimates <-
-      all_rmse_estimates %>%
-      bind_rows(
-        loaded_estimates %>%   
-          purrr:::map(rmse_estimator) %>%
-          bind_rows() %>%
-          mutate(filename = estimates_files_list[i] %>% str_remove("simdata/")) %>%
-          left_join(conditions)
-      )
-  } else {
-    stop("Something went wrong.")
-  }
-  
 }
 
-mean_rmse_by_condition <-
-  all_rmse_estimates %>% 
-  group_by(Condition) %>% 
-  summarize(
-    across(contains("_rmse"), \(x) sum(!is.na(x)), .names = "n_{.col}")
-    , across(contains("_rmse"), \(x) mean(x, na.rm = TRUE), .names = "mean_{.col}")
-            ) %>%
-  select(-contains("mean_n_"))
-
-se_rmse_by_condition <-
-  all_rmse_estimates %>%
-  group_by(Condition) %>%
-  summarize(
-    across(contains("_rmse"), \(x) sum(!is.na(x)), .names = "n_{.col}")
-    , across(contains("_rmse"), \(x) se_estimator(x), .names = "se_{.col}")
-  ) %>%
-  select(-contains("se_n_"))
-  
-
 all_rmse_estimates %>%
+  dplyr::select(contains("_est_")) %>%
   saveRDS("results/04_all_rmse_estimates.RDS")
 
-mean_rmse_by_condition %>%
+all_rmse_estimates %>%
+  dplyr::select(contains("Mean_")) %>%
+  distinct() %>%
   saveRDS("results/04_mean_rmse_by_condition.RDS")
 
-se_rmse_by_condition %>%
+all_rmse_estimates %>%
+  dplyr::select(contains("SD_")) %>%
+  distinct() %>%
   saveRDS('results/04_se_rmse_estimates.RDS')
 
 ```
 
 ## Linear Models
 
+### Bias
+
+::: {.panel-tabset}
+
+#### Anova
+
 ```{r bias-anova}
-#| eval: false
+#| eval: true
 
 all_bias_estimates <-
   readRDS(file = 'results/01_all_bias_estimates.RDS') 
@@ -1667,21 +1841,235 @@ long_bias_estimates <-
   ) %>%
   mutate(
     method_ = str_remove(method_, '_theta_est_bias') |> factor(levels = c("prox", "jmle", "cmle", "eap"))
-    , Item_and_Person_Params = factor(Item_and_Person_Params)
+    , Item_and_Person_Params = paste0("ItemMean: ", ItemMean, " & PersonMean: ", PersonMean) |> factor()
+    , N_Items = factor(N_Items, levels = c("200", "150", "100"))
+    , N_Person = factor(N_Person, levels = c("1000", "500", "200", "100", "50", "25"))
+    , Title = fct(Title, levels = title_factor)
   )
 
 linear_model_bias <-
-  lm(bias ~ Item_and_Person_Params * N * method_, data = long_bias_estimates) 
+  lm(bias ~ (Title + N_Person + N_Items + method_)^4
+     , data = long_bias_estimates #%>% filter((Title %in% c("Extreme Mismatch", "Large Mismatch", "Small Mismatch")))
+     ) 
 
-linear_model_bias %>%
-  summary()
+# linear_model_bias %>%
+#   summary()
 linear_model_bias %>%
   anova()
+```
 
+#### Model Fit Plot
+
+```{r bias-fit-plot}
+linear_model_bias %>%
+  plot()
+```
+
+#### Regression 
+
+```{r bias-regression-sjPlot}
 linear_model_bias %>%
   sjPlot::tab_model(
     show.intercept = FALSE
     , show.reflvl = TRUE
+  ) 
+```
+
+#### Mean Bias Plot by N_Items
+
+```{r mean-bias-plot}
+mean_bias_estimates %>%
+  dplyr::select(contains("Mean_")) %>%
+  distinct() %>%
+  mutate(
+    Title = fct(Title, levels = title_factor)
+    , N_Items = factor(N_Items, levels = c("200", "150", "100"))
+  ) %>%
+  pivot_longer(
+    cols = contains("_Bias")
+    , values_to = "Bias"
+    , names_to = "Estimation"
+  ) %>%
+  ggplot() +
+  geom_bar(
+    aes(y = Bias, x = Title, group = N_Items, fill = Estimation)
+    , stat = 'identity'
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  facet_wrap(~ Estimation + N_Items, nrow = 5) + guides(fill="none")
+```
+
+:::
+
+### MAD
+
+::: {.panel-tabset}
+
+#### Anova
+
+```{r MAD-anova}
+#| eval: true
+
+all_MAD_estimates <-
+  readRDS(file = 'results/02_all_mad_estimates.RDS') 
+mean_MAD_estimates <-
+  readRDS(file = 'results/02_mean_mad_by_condition.RDS')
+se_MAD_estimates <-
+  readRDS(file = 'results/02_se_mad_by_condition.RDS')
+long_MAD_estimates <-
+  all_MAD_estimates %>%
+  pivot_longer(
+    cols = contains('_MAD')
+    , names_to = 'method_'
+    , values_to = 'MAD'
+  ) %>%
+  mutate(
+    method_ = str_remove(method_, '_theta_est_MAD') |> factor(levels = c("prox", "jmle", "cmle", "eap"))
+    , Item_and_Person_Params = paste0("ItemMean: ", ItemMean, " & PersonMean: ", PersonMean) |> factor()
+    , N_Items = factor(N_Items, levels = c("200", "150", "100"))
+    , N_Person = factor(N_Person, levels = c("1000", "500", "200", "100", "50", "25"))
+    , Title = fct(Title, levels = title_factor)
   )
 
+linear_model_MAD <-
+  lm(MAD ~ (Title + N_Person + N_Items + method_)^4
+     , data = long_MAD_estimates #%>% filter((Title %in% c("Extreme Mismatch", "Large Mismatch", "Small Mismatch")))
+     ) 
+
+# linear_model_MAD %>%
+#   summary()
+linear_model_MAD %>%
+  anova()
 ```
+
+#### Model Fit Plot
+
+```{r MAD-fit-plot}
+linear_model_MAD %>%
+  plot()
+```
+
+#### Regression 
+
+```{r MAD-regression-sjPlot}
+linear_model_MAD %>%
+  sjPlot::tab_model(
+    show.intercept = FALSE
+    , show.reflvl = TRUE
+  ) 
+```
+
+#### Mean MAD Plot by N_Items
+
+```{r mean-MAD-plot}
+mean_MAD_estimates %>%
+  dplyr::select(contains("Mean_")) %>%
+  distinct() %>%
+  mutate(
+    Title = fct(Title, levels = title_factor)
+    , N_Items = factor(N_Items, levels = c("200", "150", "100"))
+    ) %>%
+  pivot_longer(
+    cols = contains("_MAD_")
+    , values_to = "MAD"
+    , names_to = "Estimation"
+  ) %>%
+  ggplot() +
+  geom_bar(
+    aes(y = MAD, x = Title, group = N_Items, fill = Estimation)
+    , stat = 'identity'
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  facet_wrap(~ Estimation + N_Items, nrow = 5) + guides(fill="none")
+
+```
+
+:::
+
+### MSE
+
+::: {.panel-tabset}
+
+#### Anova
+
+```{r MSE-anova}
+#| eval: true
+
+all_MSE_estimates <-
+  readRDS(file = 'results/03_all_mse_estimates.RDS') 
+mean_MSE_estimates <-
+  readRDS(file = 'results/03_mean_mse_by_condition.RDS')
+se_MSE_estimates <-
+  readRDS(file = 'results/03_se_mse_estimates.RDS')
+long_MSE_estimates <-
+  all_MSE_estimates %>%
+  pivot_longer(
+    cols = contains('_MSE')
+    , names_to = 'method_'
+    , values_to = 'MSE'
+  ) %>%
+  mutate(
+    method_ = str_remove(method_, '_theta_est_MSE') |> factor(levels = c("prox", "jmle", "cmle", "eap"))
+    , Item_and_Person_Params = paste0("ItemMean: ", ItemMean, " & PersonMean: ", PersonMean) |> factor()
+    , N_Items = factor(N_Items, levels = c("200", "150", "100"))
+    , N_Person = factor(N_Person, levels = c("1000", "500", "200", "100", "50", "25"))
+    , Title = fct(Title, levels = title_factor)
+  )
+
+linear_model_MSE <-
+  lm(MSE ~ (Title + N_Person + N_Items + method_)^4
+     , data = long_MSE_estimates #%>% filter((Title %in% c("Extreme Mismatch", "Large Mismatch", "Small Mismatch")))
+     ) 
+
+# linear_model_MSE %>%
+#   summary()
+linear_model_MSE %>%
+  anova()
+```
+
+#### Model Fit Plot
+
+```{r MSE-fit-plot}
+linear_model_MSE %>%
+  plot()
+```
+
+#### Regression 
+
+```{r MSE-regression-sjPlot}
+linear_model_MSE %>%
+  sjPlot::tab_model(
+    show.intercept = FALSE
+    , show.reflvl = TRUE
+  ) 
+```
+
+#### Mean MSE Plot by N_Items
+
+```{r mean-MSE-plot}
+
+mean_MSE_estimates %>%
+  dplyr::select(contains("Mean_")) %>%
+  distinct() %>%
+  mutate(
+    Title = fct(Title, levels = title_factor)
+    , N_Items = factor(N_Items, levels = c("200", "150", "100"))
+    ) %>%
+  pivot_longer(
+    cols = contains("_MSE_")
+    , values_to = "MSE"
+    , names_to = "Estimation"
+  ) %>%
+  ggplot() +
+  geom_bar(
+    aes(y = MSE, x = Title, group = N_Items, fill = Estimation)
+    , stat = 'identity'
+  ) +
+  theme_bw() +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1)) +
+  facet_wrap(~ Estimation + N_Items, nrow = 5) + guides(fill="none")
+```
+
+:::
